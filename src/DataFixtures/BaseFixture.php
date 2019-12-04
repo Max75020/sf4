@@ -15,6 +15,8 @@ abstract class BaseFixture extends Fixture
     private $manager;
     /** @var Generator*/
     protected $faker;
+    // Liste des références aux entités générées par la fixtures
+    private $references = [];
 
     //Méthode à implémenter par les classes enfants
     // dans laquelle générer les fausses données
@@ -33,9 +35,10 @@ public function load(ObjectManager $manager)
     /**
      * Créer plusieurs entités
      * @param int $count    nombre d'entités à créer
+     * @param string $groupName nom associé aux entités générées
      * @param callable $factory fonction pour créer l'entité
      */
-protected function createMany(int $count, callable  $factory)
+protected function createMany(int $count,string $groupName ,callable  $factory)
 {
     //Exécuter $factory $count fois
     for($i = 0; $i <$count; $i++){
@@ -48,7 +51,33 @@ protected function createMany(int $count, callable  $factory)
 
         // Avertir Doctrine pour l'enregistrement de l'entité
         $this->manager->persist($entity);
+
+        //Ajouter une référence pour l'entité
+        $this->addReference(sprintf('%s_%d', $groupName, $i), $entity);
+
+
     }
 
+}
+
+/**
+ * Obtenir une entié aléatoire d'un groupe
+ */
+protected function getRandomReference(string $groupName)
+{
+    // Si les références ne sont pas présentes dans la propriété:
+    if (isset($this->references[$groupName]))
+    {
+        //Récupération des références
+        foreach ($this->referenceRepository->getReferences() as $key => $ref){
+            if (strpos($key, $groupName . '_') === 0){
+                $this->references[$groupName][] = $ref;
+            }
+        }
+    }
+
+    // Retourner une référence aléatoire
+    $randomReferenceKey = $this->faker->randomElement($this->references[$groupName]);
+    return $this->getReference($randomReferenceKey);
 }
 }
