@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Record;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 /**
@@ -13,8 +14,10 @@ class RecordController extends AbstractController
     /**
      * @Route("/{id}", name="page")
      */
-    public function index($id)
+    public function index(Record $record)
     {
-        return $this->render('ranking/news.html.twig');
+        return $this->render('record/record._page.html.twig' , [
+            'record' =>$record
+        ]);
     }
 }
