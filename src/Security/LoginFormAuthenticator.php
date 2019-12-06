@@ -37,12 +37,18 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
         $this->passwordEncoder = $passwordEncoder;
     }
 
+    /**
+     * Détecter une tentative de connexion
+     */
     public function supports(Request $request)
     {
         return 'app_login' === $request->attributes->get('_route')
             && $request->isMethod('POST');
     }
 
+    /**
+     * Récupérer lesdonnées du formulaire de connexion
+     */
     public function getCredentials(Request $request)
     {
         $credentials = [
@@ -58,6 +64,9 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
         return $credentials;
     }
 
+    /**
+     * Chercher un utilisateur en BDD
+     */
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
         $token = new CsrfToken('authenticate', $credentials['csrf_token']);
@@ -69,15 +78,25 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
 
         if (!$user) {
             // fail authentication with a custom error
-            throw new CustomUserMessageAuthenticationException('Email could not be found.');
+            throw new CustomUserMessageAuthenticationException('Adresse email inconnue !');
         }
 
         return $user;
     }
 
+    /**
+     * Vérifier le mot de passe
+     */
     public function checkCredentials($credentials, UserInterface $user)
     {
-        return $this->passwordEncoder->isPasswordValid($user, $credentials['password']);
+        // booléen = mot de passe valide ?
+       $validation = $this->passwordEncoder->isPasswordValid($user, $credentials['password']);
+
+       // Mauvais mot de passe
+        if (!$validation){
+            throw new CustomUserMessageAuthenticationException('Mot de passe incorrect!');
+        }
+        return $validation;
     }
 
     /**
@@ -88,14 +107,16 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
         return $credentials['password'];
     }
 
+    /**
+     * Après authentification : redirection
+     */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
         if ($targetPath = $this->getTargetPath($request->getSession(), $providerKey)) {
             return new RedirectResponse($targetPath);
         }
 
-        // For example : return new RedirectResponse($this->urlGenerator->generate('some_route'));
-        throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
+        return new RedirectResponse($this->urlGenerator->generate('home'));
     }
 
     protected function getLoginUrl()
