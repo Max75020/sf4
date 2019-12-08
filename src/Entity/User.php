@@ -33,6 +33,11 @@ class User implements UserInterface
      */
     private $password;
 
+    /**
+     * @ORM\Column(type="string", length=255, unique=true)
+     */
+    private $pseudo;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -109,9 +114,22 @@ class User implements UserInterface
      */
     public function eraseCredentials()
     {
-        // If you store any temporary, sensitive data on the user, clear it here
+        // If youo
+        // store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
         // information sensible dans un court délai pour un utilisateur
 
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): self
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
     }
 }
