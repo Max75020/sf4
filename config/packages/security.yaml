@@ -1,7 +1,11 @@
 security:
+
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_EDITOR]
     encoders:
         App\Entity\User:
             algorithm: auto
+
 
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
@@ -9,7 +13,8 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: email,pseudo
+                property: email
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
