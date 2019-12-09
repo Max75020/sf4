@@ -47,19 +47,18 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
     }
 
     /**
-     * Récupérer lesdonnées du formulaire de connexion
+     * Récupérer les données du formulaire de connexion
      */
     public function getCredentials(Request $request)
     {
         $credentials = [
-            'email' => $request->request->get('email'),
+            'username' => $request->request->get('username'),
             'password' => $request->request->get('password'),
             'csrf_token' => $request->request->get('_csrf_token'),
-            'pseudo' => $request->request->get('pseudo')
         ];
         $request->getSession()->set(
             Security::LAST_USERNAME,
-            $credentials['email'] or $credentials['pseudo']
+            $credentials['username']
         );
 
         return $credentials;
@@ -75,26 +74,18 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
             throw new InvalidCsrfTokenException();
         }
 
-        if ($credentials['email'])
-        {
-            $user = $this->entityManager->getRepository(User::class)
-                ->findOneBy(['email' => $credentials['email']]);
+        // Récupération de UserRepository
+        $userRepository = $this->entityManager->getRepository(User::class);
+        // Récupérer par email OU par pseudo
+        $user = $userRepository->findOneBy(['email' => $credentials['username']])
+            ?? $userRepository->findOneBy(['pseudo' => $credentials['username']]);
 
         if (!$user) {
             // fail authentication with a custom error
-            throw new CustomUserMessageAuthenticationException('Adresse email inconnue !');
-        }
-        }
-
-        if ($credentials['pseudo'])
-        {
-            $user = $this->entityManager->getRepository(User::class)
-                ->findOneBy(['pseudo' => $credentials['pseudo']]);
-
-            if (!$user) {
-                // fail authentication with a custom error
-                throw new CustomUserMessageAuthenticationException('Pseudo inconnue !');
-            }
+            throw new CustomUserMessageAuthenticationException(sprintf(
+                'Aucun utilisateur trouvé pour "%s"',
+                $credentials['username']
+            ));
         }
 
         return $user;
@@ -106,12 +97,13 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
     public function checkCredentials($credentials, UserInterface $user)
     {
         // booléen = mot de passe valide ?
-       $validation = $this->passwordEncoder->isPasswordValid($user, $credentials['password']);
+        $validation = $this->passwordEncoder->isPasswordValid($user, $credentials['password']);
 
-       // Mauvais mot de passe
-        if (!$validation){
-            throw new CustomUserMessageAuthenticationException('Mot de passe incorrect!');
+        // Mauvais mot de passe
+        if (!$validation) {
+            throw new CustomUserMessageAuthenticationException('Mot de passe incorrect !');
         }
+
         return $validation;
     }
 
@@ -124,7 +116,7 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
     }
 
     /**
-     * Après authentification : redirection
+     * Après authentification: redirection
      */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
@@ -132,6 +124,7 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
             return new RedirectResponse($targetPath);
         }
 
+        // For example :
         return new RedirectResponse($this->urlGenerator->generate('home'));
     }
 
