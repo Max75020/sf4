@@ -23,7 +23,7 @@ class ArtistController extends AbstractController
     {
         //Création du formulaire
         $form = $this->createForm(SearchFormType::class);
-        // Traitement de la requeet par le formulaire
+        // Traitement de la requete par le formulaire
         $form->handleRequest($request);
 
         // Si le formulaire est envoyé & valide
@@ -36,7 +36,6 @@ class ArtistController extends AbstractController
         else{
             $list = $artistRepository->findAll();
             $title = 'Artistes' ;
-
         }
 
         return $this->render('artists/list.html.twig', [
