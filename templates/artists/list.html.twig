@@ -7,7 +7,7 @@
 
 {% block content %}
     <div class="section">
-        <h2 class="title">Artistes: {{ artist_list|length }}</h2>
+        <h2 class="title">{{ title }} : {{ artist_list|length }}</h2>
 
         <section class="section has-background-white-ter">
             <h3 class="subtitle">Recherche</h3>
@@ -51,6 +51,19 @@
                         </article>
                     </div>
                 </div>
+                {% else %}
+
+    <div class="column is-full">
+        <section class="hero is-warning">
+            <div class="container">
+                <h3 class="title">
+                Aucun résultat pour votre recherche !
+                </h3>
+            </div>
+        </section>
+    </div>
+
+
             {% endfor %}
         </div>
     </div>
