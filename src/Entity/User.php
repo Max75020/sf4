@@ -2,11 +2,16 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
+ * @UniqueEntity("email", message="Cette adresse email est déjà utilisée.")
+ * @UniqueEntity("pseudo", message="Ce pseudo n'est pas disponible.")
  */
 class User implements UserInterface
 {
@@ -34,9 +39,27 @@ class User implements UserInterface
     private $password;
 
     /**
-     * @ORM\Column(type="string", length=255, unique=true)
+     * @ORM\Column(type="string", length=40, unique=true)
      */
     private $pseudo;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Note", mappedBy="user", orphanRemoval=true)
+     */
+    private $notes;
+
+    public function __construct()
+    {
+        $this->notes = new ArrayCollection();
+    }
+
+    /**
+     * Appelée lorsque l'objet est utilisé comme une chaine de caractère
+     */
+    public function __toString()
+    {
+        return $this->getUsername();
+    }
 
     public function getId(): ?int
     {
@@ -71,8 +94,8 @@ class User implements UserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Les roles sont des chaines de caractères commençant par ROLE_
-        // on peut créer n'importe quel role
+        // les rôles sont des chaînes de caractères commençant par ROLE_
+        // on peut créer n'importe quel rôle
         // mais un utilisateur doit avoir ROLE_USER
         $roles[] = 'ROLE_USER';
 
@@ -114,11 +137,8 @@ class User implements UserInterface
      */
     public function eraseCredentials()
     {
-        // If youo
-        // store any temporary, sensitive data on the user, clear it here
+        // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
-        // information sensible dans un court délai pour un utilisateur
-
     }
 
     public function getPseudo(): ?string
@@ -129,6 +149,37 @@ class User implements UserInterface
     public function setPseudo(string $pseudo): self
     {
         $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Note[]
+     */
+    public function getNotes(): Collection
+    {
+        return $this->notes;
+    }
+
+    public function addNote(Note $note): self
+    {
+        if (!$this->notes->contains($note)) {
+            $this->notes[] = $note;
+            $note->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNote(Note $note): self
+    {
+        if ($this->notes->contains($note)) {
+            $this->notes->removeElement($note);
+            // set the owning side to null (unless already changed)
+            if ($note->getUser() === $this) {
+                $note->setUser(null);
+            }
+        }
 
         return $this;
     }
