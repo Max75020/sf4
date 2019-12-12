@@ -4,7 +4,7 @@
         <article class="media">
             <div class="media-left">
                 <figure class="image is-128x128">
-                    <img src="https://loremflickr.com/256/256/album,music/all?lock={{ record.id }}" alt="Image">
+                    <img src="https://loremflickr.com/256/256/album,music/all?lock={{ record.id }}" alt="{{ record.artist.name }} {{ record.title }}">
                 </figure>
             </div>
 
@@ -12,7 +12,7 @@
                 <div class="content">
                     <p>
                         <span class="tag is-primary">
-                            {{ record.averageNote|number_format(2) }}/10
+                            {{ record.averageNote|number_format() }}/10
                         </span>
                         <a href="{{ path('record_page', {id: record.id}) }}" class="has-text-primary">
                             <strong>{{ record.title }}</strong>
