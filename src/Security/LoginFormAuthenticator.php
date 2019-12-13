@@ -112,6 +112,7 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator implements P
      */
     public function getPassword($credentials): ?string
     {
+
         return $credentials['password'];
     }
 

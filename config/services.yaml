@@ -16,6 +16,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
         # Variables récupérable par autowiring
+
         bind :
             $maConfig: '%ma_config%'
 
