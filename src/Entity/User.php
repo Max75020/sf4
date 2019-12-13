@@ -50,11 +50,6 @@ class User implements UserInterface
     private $notes;
 
     /**
-     * @ORM\Column(type="boolean")
-     */
-    private $isConfirmed;
-
-    /**
      * @ORM\Column(type="string", length=255)
      */
     private $securityToken;
@@ -242,18 +237,6 @@ class User implements UserInterface
         $token = bin2hex(random_bytes(16));
 
         return $this->setSecurityToken($token);
-    }
-
-    public function getPasswordConfirmed(): ?string
-    {
-        return $this->passwordConfirmed;
-    }
-
-    public function setPasswordConfirmed(string $passwordConfirmed): self
-    {
-        $this->passwordConfirmed = $passwordConfirmed;
-
-        return $this;
     }
 
 }

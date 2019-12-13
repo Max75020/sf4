@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Security\LoginFormAuthenticator;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
@@ -17,37 +19,41 @@ class RegistrationController extends AbstractController
     /**
      * @Route("/register", name="app_register")
      */
-    public function register(Request $request, UserPasswordEncoderInterface $passwordEncoder, GuardAuthenticatorHandler $guardHandler, LoginFormAuthenticator $authenticator): Response
+    public function index(Request $request, UserPasswordEncoderInterface $encoder, EntityManagerInterface $em, MailerInterface $mail)
     {
-        $user = new User();
-        $form = $this->createForm(RegistrationFormType::class, $user);
-        $form->handleRequest($request);
+        $registration_Form = $this->createForm(RegistrationFormType::class);
+        $registration_Form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // encode the plain password
-            $user->setPassword(
-                $passwordEncoder->encodePassword(
-                    $user,
-                    $form->get('password')->getData()
-                )
-            );
+        if ($registration_Form->isSubmitted() && $registration_Form->isValid()) {
+            $user = $registration_Form->getData();
+            $password = $user->getPassword();
+            $encoded = $encoder->encodePassword($user, $password);
+            $user->setPassword($encoded)
+                ->setIsConfirmed(false)
+                ->renewToken();
+            $em->persist($user);
+            $em->flush();
 
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($user);
-            $entityManager->flush();
 
-            // do anything else you need here, like send an email
+            $email = (new mail())
+                ->from('fabien@example.com')
+                ->to(new Address('bourdonnne.chris@gmail.Com'))
+                ->subject('Thanks for signing up!')
 
-            return $guardHandler->authenticateUserAndHandleSuccess(
-                $user,
-                $request,
-                $authenticator,
-                'main' // firewall name in security.yaml
-            );
+                // path of the Twig template to render
+                ->htmlTemplate('emails/signup.html.twig')
+
+                // pass variables (name => value) to the template
+                ->context([
+                    'expiration_date' => new \DateTime('+7 days'),
+                    'username' => 'foo',
+                ]);
+
+            $this->addFlash('success', 'Inscription reussi.Veuillez consulter votre boite email pour confirmer votre adresse email');
         }
-
-        return $this->render('registration/register.html.twig', [
-            'registrationForm' => $form->createView(),
+        return $this->render('user/registration.html.twig', [
+            'registration_form' => $registration_Form->createView()
         ]);
     }
+
 }
